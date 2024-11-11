@@ -1,3 +1,4 @@
+from src.prepare import normalize_cvat
 def main():
     print("Hello from aiden!")
 

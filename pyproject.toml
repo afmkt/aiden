@@ -6,9 +6,11 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "gradio>=5.5.0",
+    "shapely>=2.0.6",
     "torch>=2.5.1",
     "torchaudio>=2.5.1",
     "torchvision>=0.20.1",
+    "tqdm>=4.67.0",
     "ultralytics>=8.3.28",
 ]
 
