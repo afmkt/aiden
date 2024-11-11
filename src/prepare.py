@@ -29,7 +29,7 @@ def init_dir(dir: str)-> None:
         shutil.rmtree(dir)
     os.makedirs(dir, exist_ok=True)
 
-def normalize_cvat(srcdir: str = os.path.join('data', 'lowerboneandImplant'), dstdir : str = os.path.join('data', 'repo')) -> str:
+def normalize_cvat(srcdir: str = os.path.join('data', 'lowerboneandImplant'), dstdir : str = os.path.join('data', 'repo')):
     print('''Normalize CVAT dataset bysaving 
 1. Save images with md5 checksum as file name
 2. Removing non-existing image from XML annotations.xml''')
@@ -61,13 +61,9 @@ def normalize_cvat(srcdir: str = os.path.join('data', 'lowerboneandImplant'), ds
         root.remove(n)
     cvat.write(os.path.join(dstdir, 'annotations.xml'), encoding='utf8')
     print(f'Normalized CVAT dataset in {dstdir}')
-    return dstdir
 
 
 def cvat2coco(srcdir: str = os.path.join('data', 'repo')):
-    def bbox(pnts):
-        x, y = zip(*pnts)
-        return [min(x), min(y), max(x) - min(x), max(y) - min(y)]        
     xmlfile = os.path.join(srcdir, 'annotations.xml')
     cvat = xml.etree.ElementTree.parse(xmlfile, parser=xml.etree.ElementTree.XMLParser(encoding="utf-8"))
     root = cvat.getroot()
@@ -138,15 +134,18 @@ def cvat2coco(srcdir: str = os.path.join('data', 'repo')):
                     'supercategory': blabel,
                     'id': len(categories)
                 }
+            minx, miny, maxx, maxy = min(xtl, xbr), min(ytl, ybr), max(xtl, xbr), max(ytl, ybr)
             annotations.append({
                 'id': len(annotations),
                 'image_id': int(img.get('id')),
                 'category_id': categories[blabel]['id'],
                 'area': Polygon(points).area,
-                'bbox': bbox([(xtl, ytl),(xtl, ybr),(xbr, ybr),(xbr, ytl)]),
+                'bbox': [minx, miny, maxx - minx, maxy - miny]        ,
                 'iscrowd': 0
             })            
     ann['categories'] = list(categories.values())
-    json.dump(ann, open(os.path.join(srcdir, 'coco-annotations.json'), "w"), indent=4)
+    jsonfile = os.path.join(srcdir, 'coco-annotations.json')
+    json.dump(ann, open(jsonfile, "w"), indent=4)
+    print(f"COCO json file at {jsonfile}")
     
 
