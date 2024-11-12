@@ -22,7 +22,7 @@ def cpfile(src: str, dst: str)-> Tuple[str, str, str] | None:
         md5 = hashlib.md5(open(src, 'rb').read()).hexdigest()
         dst = os.path.join(dst, f'{md5}{ext}')
         shutil.copy(src, dst)
-        return dst, os.path.basename(dst), md5
+        return os.path.dirname(dst), os.path.basename(dst), md5
     return None
 def init_dir(dir: str)-> None:
     if os.path.exists(dir):
@@ -49,12 +49,14 @@ def normalize_cvat(srcdir: str = os.path.join('data', 'lowerboneandImplant'), ds
                 img.set('height', h)
             if w != int(img.get('width')):
                 img.set('width', w)
-            fullpath, basename, md5 = cpfile(imgfile, dstimgdir)
-            img.set('name', basename)
+            dir, basename, md5 = cpfile(imgfile, dstimgdir)
             img.set('md5', md5)
             if md5 not in saved_files:
                 saved_files[md5] = str(len(saved_files))
             img.set('id', saved_files[md5])
+            fname = f'{str(saved_files[md5]).zfill(4)}-{basename}' 
+            img.set('name', fname)
+            os.rename(os.path.join(dir, basename), os.path.join(dir, fname))
         else:
             should_delete.append(img)
     for n in should_delete:
@@ -159,7 +161,6 @@ def seg2kpt(seg: List[Tuple[float, float]], count: int)->List[float]:
     return [r for lst in [(*t, 2) for t in zip(new_x, new_y)] for r in lst]
 
 def cvat2coco_kpt(srcdir: str = os.path.join('data', 'repo'), kpt_count: int = 34):
-
     xmlfile = os.path.join(srcdir, 'annotations.xml')
     cvat = xml.etree.ElementTree.parse(xmlfile, parser=xml.etree.ElementTree.XMLParser(encoding="utf-8"))
     root = cvat.getroot()
@@ -242,3 +243,17 @@ def cvat2coco_kpt(srcdir: str = os.path.join('data', 'repo'), kpt_count: int = 3
     jsonfile = os.path.join(srcdir, 'coco-kpt-annotations.json')
     json.dump(ann, open(jsonfile, "w"), indent=4)
     print(f"KPT COCO json file at {jsonfile}")
+
+
+
+def coco_seg2yolo(srcdir = os.path.join('data', 'repo'), dstdir = os.path.join('data', 'yolo', 'label')):
+    import supervision as sv
+    if not os.path.isdir(dstdir):
+        os.makedirs(dstdir, exist_ok=True)
+    ds = sv.DetectionDataset.from_coco(
+        images_directory_path = os.path.join(srcdir, 'images'), 
+        annotations_path = os.path.join(srcdir,'coco-seg-annotations.json'))
+    ds.as_yolo(
+        annotations_directory_path = os.path.join(dstdir,'labels'),
+        data_yaml_path = os.path.join(dstdir, 'data.yaml'))
+    
