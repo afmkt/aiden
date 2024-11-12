@@ -2,6 +2,9 @@ from pycocotools.coco import COCO
 import matplotlib.pyplot as plt
 import os
 import cv2
+import matplotlib
+matplotlib.rc('font', family='Hiragino Sans GB')
+
 def validate_image_id(coco):
     image_ids = {img['id'] for img in coco.imgs.values()}
     for ann in coco.anns.values():
@@ -47,8 +50,22 @@ def validate_coco(annfile: str = 'data/repo/coco-annotations.json', img_dir = 'd
         plt.imshow(image[..., ::-1])
         plt.axis('off')
 
-        ann_ids = coco.getAnnIds(imgIds=img['id'])
-        anns = coco.loadAnns(ann_ids)
-        coco.showAnns(anns)
+        annIds = coco.getAnnIds(imgIds=img['id'], iscrowd=None)
+        anns = coco.loadAnns(annIds)        
+        for ann in anns:
+            # Get category name
+            catId = ann['category_id']
+            catName = coco.loadCats(ids=[catId])[0]['name']
+
+            # Get segmentation mask
+            mask = coco.annToMask(ann)
+
+            # Plot mask with color
+            plt.imshow(mask, alpha=0.5)
+
+            # Add label
+            bbox = ann['bbox']
+            x, y, w, h = bbox
+            plt.text(x, y, catName, color='white')
         plt.show()
 

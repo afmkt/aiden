@@ -98,28 +98,36 @@ def cvat2coco(srcdir: str = os.path.join('data', 'repo')):
         for polyline in img.iter('polyline'):
             plabel = polyline.get('label')
             points = list(map(lambda p: (float(p.split(',')[0]), float(p.split(',')[1])), polyline.get('points').split(';')))
-            if plabel in categories:
-                k = categories[plabel]['keypoints']
-                if len(points) > len(k):
-                    categories[plabel]['keypoints'] = list(map(lambda i: str(i), range(len(points))))
-                    categories[plabel]['skeleton'] = list(zip(range(len(points)), range(len(points))[1:]))
-            else:               
+            if plabel not in categories:
                 categories[plabel] = {
                     'name': plabel,
                     'supercategory': plabel,
-                    'id': len(categories),
-                    'keypoints': list(map(lambda i: str(i), range(len(points)))),
-                    'skeleton': list(zip(range(len(points)), range(len(points))[1:]))
+                    'id': len(categories)
                 }
+            # if plabel in categories:
+            #     k = categories[plabel]['keypoints']
+            #     if len(points) > len(k):
+            #         categories[plabel]['keypoints'] = list(map(lambda i: str(i), range(len(points))))
+            #         categories[plabel]['skeleton'] = list(zip(range(len(points)), range(len(points))[1:]))
+            # else:               
+            #     categories[plabel] = {
+            #         'name': plabel,
+            #         'supercategory': plabel,
+            #         'id': len(categories),
+            #         'keypoints': list(map(lambda i: str(i), range(len(points)))),
+            #         'skeleton': list(zip(range(len(points)), range(len(points))[1:]))
+            #     }
+            minx, miny, maxx, maxy = Polygon(points).bounds
             annotations.append({
                 'id': len(annotations),
                 'image_id': int(img.get('id')),
                 'category_id': categories[plabel]['id'],
                 'segmentation': [[r for lst in points for r in lst]],
                 'area': Polygon(points).area,
+                'bbox': [minx, miny, maxx - minx, maxy - miny],
                 'iscrowd': 0,
-                'keypoints': [r for lst in map(lambda pnt: list(pnt) + [2], points) for r in lst],
-                'num_keypoints': len(points)
+                # 'keypoints': [r for lst in map(lambda pnt: list(pnt) + [2], points) for r in lst],
+                # 'num_keypoints': len(points)
             })
 
         for box in img.iter('box'):
@@ -128,6 +136,7 @@ def cvat2coco(srcdir: str = os.path.join('data', 'repo')):
             ytl = float(box.get('ytl'))
             xbr = float(box.get('xbr'))
             ybr = float(box.get('ybr'))
+            points = [(xtl, ytl), (xtl, ybr), (xbr, ybr), (xbr, ytl)]
             if blabel not in categories:
                 categories[blabel] = {
                     'name': blabel,
@@ -139,8 +148,9 @@ def cvat2coco(srcdir: str = os.path.join('data', 'repo')):
                 'id': len(annotations),
                 'image_id': int(img.get('id')),
                 'category_id': categories[blabel]['id'],
+                'segmentation': [[r for lst in points for r in lst]],
                 'area': Polygon(points).area,
-                'bbox': [minx, miny, maxx - minx, maxy - miny]        ,
+                'bbox': [minx, miny, maxx - minx, maxy - miny],
                 'iscrowd': 0
             })            
     ann['categories'] = list(categories.values())
