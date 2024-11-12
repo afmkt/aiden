@@ -1,8 +1,9 @@
 from pycocotools.coco import COCO
 import matplotlib.pyplot as plt
-import os
 import cv2
 import matplotlib
+
+# set Chinese font
 matplotlib.rc('font', family='Hiragino Sans GB')
 
 def validate_image_id(coco):
@@ -28,6 +29,8 @@ def validate_seg_coords(coco):
                 # This check may vary depending on your RLE encoding.
                 raise Exception('RLE format')
                 pass  # RLE validation could depend on your encoding method.
+        elif 'keypoints' in ann:
+            pass
         else:
             print(ann)
             print('********************************************')
@@ -39,7 +42,7 @@ def validate_category_id(coco):
             raise Exception(f"Invalid category_id {ann['category_id']} in annotation {ann['id']}")
 
 
-def validate_coco(annfile: str = 'data/repo/coco-annotations.json', img_dir = 'data/repo/images'):
+def validate_coco_seg(annfile: str = 'data/repo/coco-seg-annotations.json', img_dir = 'data/repo/images'):
     coco = COCO(annfile)
     validate_category_id(coco)
     validate_image_id(coco)
@@ -67,5 +70,22 @@ def validate_coco(annfile: str = 'data/repo/coco-annotations.json', img_dir = 'd
             bbox = ann['bbox']
             x, y, w, h = bbox
             plt.text(x, y, catName, color='white')
+        plt.show()
+
+def validate_coco_kpt(annfile: str = 'data/repo/coco-kpt-annotations.json', img_dir = 'data/repo/images'):
+    coco = COCO(annfile)
+    validate_category_id(coco)
+    validate_image_id(coco)
+    validate_seg_coords(coco)
+    for img in coco.imgs.values():
+        imgfile = f"{img_dir}/{img['file_name']}"
+        image = cv2.imread(imgfile)
+        plt.imshow(image[..., ::-1])
+        plt.axis('off')
+
+        annIds = coco.getAnnIds(imgIds=img['id'], iscrowd=None)
+        anns = coco.loadAnns(annIds)    
+        plt.imshow(image)    
+        coco.showAnns(anns)
         plt.show()
 
