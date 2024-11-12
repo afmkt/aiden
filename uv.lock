@@ -28,6 +28,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "gradio" },
     { name = "pycocotools" },
+    { name = "pyyaml" },
     { name = "shapely" },
     { name = "supervision" },
     { name = "torch" },
@@ -48,6 +49,7 @@ dev = [
 requires-dist = [
     { name = "gradio", specifier = ">=5.5.0" },
     { name = "pycocotools", specifier = ">=2.0.8" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "shapely", specifier = ">=2.0.6" },
     { name = "supervision", specifier = ">=0.24.0" },
     { name = "torch", specifier = ">=2.5.1" },

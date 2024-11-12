@@ -5,15 +5,15 @@ from shapely.geometry import Polygon
 import json
 import xml
 import os
-import os.path as path
 import hashlib
 import shutil
-import numpy as np
 import cv2
 from typing import List, Tuple
 import random
 from tqdm import tqdm
-
+from pycocotools.coco import COCO
+import yaml
+from functools import reduce
 
 
 def cpfile(src: str, dst: str)-> Tuple[str, str, str] | None:
@@ -142,7 +142,7 @@ def cvat2coco_seg(srcdir: str = os.path.join('data', 'repo')):
             })            
     ann['categories'] = list(categories.values())
     jsonfile = os.path.join(srcdir, 'coco-seg-annotations.json')
-    json.dump(ann, open(jsonfile, "w"), indent=4)
+    json.dump(ann, open(jsonfile, "w", encoding="utf-8"), ensure_ascii=False, indent=4)
     print(f"SEG COCO json file at {jsonfile}")
     
 def seg2kpt(seg: List[Tuple[float, float]], count: int)->List[float]:
@@ -241,19 +241,129 @@ def cvat2coco_kpt(srcdir: str = os.path.join('data', 'repo'), kpt_count: int = 3
             })            
     ann['categories'] = list(categories.values())
     jsonfile = os.path.join(srcdir, 'coco-kpt-annotations.json')
-    json.dump(ann, open(jsonfile, "w"), indent=4)
+    json.dump(ann, open(jsonfile, "w", encoding="utf-8"), ensure_ascii=False, indent=4)
     print(f"KPT COCO json file at {jsonfile}")
 
 
 
-def coco_seg2yolo(srcdir = os.path.join('data', 'repo'), dstdir = os.path.join('data', 'yolo', 'label')):
-    import supervision as sv
-    if not os.path.isdir(dstdir):
-        os.makedirs(dstdir, exist_ok=True)
-    ds = sv.DetectionDataset.from_coco(
-        images_directory_path = os.path.join(srcdir, 'images'), 
-        annotations_path = os.path.join(srcdir,'coco-seg-annotations.json'))
-    ds.as_yolo(
-        annotations_directory_path = os.path.join(dstdir,'labels'),
-        data_yaml_path = os.path.join(dstdir, 'data.yaml'))
+def coco_seg2yolo(srcdir = os.path.join('data', 'repo'), dstdir = os.path.join('data', 'yolo'), train_ratio = 0.8, val_ratio = 0.1):
+    src_imgdir = os.path.join(srcdir, 'images')
+    dstdir = os.path.join(dstdir, 'seg')
+    datafile = os.path.join(dstdir, 'data.yaml')    
+    coco = COCO(os.path.join(srcdir,'coco-seg-annotations.json'))
+    imgs = list(coco.imgs.values())
+    random.shuffle(imgs)
+    train_count = int(train_ratio * len(imgs))
+    val_count = int(val_ratio * len(imgs))
+    train_imgs = imgs[:train_count]
+    val_imgs = imgs[train_count: train_count + val_count]
+    test_imgs = imgs[train_count + val_count : ]
+    def generate(split, images):
+        for img in images:
+            shutil.copy(os.path.join(src_imgdir, img), os.path.join(dstdir, 'images', split, img))
+            lblfile, ext = os.path.splitext(img['file_name'])
+            lblfile = os.path.join(dstdir, 'labels', split, f'{lblfile}.txt')
+            img_ids = coco.getImgIds(imgIds=[img['file_name']])
+            ann_ids = coco.getAnnIds(imgIds=img_ids)
+            anns = coco.loadAnns(ann_ids)
+            imgh = img['height']
+            imgw = img['width']
+            coco_anns = []
+            for ann in anns:
+                category_id = ann['category_id']
+                bbox = ann['bbox']  # [x, y, width, height]
+                minx, miny, w, h = tuple(bbox)
+                xcenter = minx + w / 2.0
+                ycenter = miny + h / 2.0
+                segmentation = ann['segmentation']  
+                yolo_line = [
+                    category_id, 
+                    xcenter / imgw, 
+                    ycenter / imgh, 
+                    w / imgw, 
+                    h / imgh]
+                yolo_line.extend(map(
+                        lambda idx, n: (n / imgw) if idx % 2 == 0 else (n / imgh), 
+                        enumerate(segmentation))))
+                coco_anns.append(yolo_line)
+            with open(lblfile, 'w') as file:                    
+                file.writelines([" ".join(map(str, a)) for a in coco_anns])
+    generate(train_imgs)
+    generate(val_imgs)
+    generate(test_imgs)
+    # write out data.yaml
+    category_ids = coco.getCatIds()
+    categories = coco.loadCats(category_ids)
+    with open(datafile, 'w') as ofile:
+        def toobj(a, c):
+            a[c['id']] = c['name']
+            return a
+        yaml.dump({
+            'path': dstdir,
+            'train': os.path.join(dstdir, 'images', 'train'),
+            'val': os.path.join(dstdir, 'images', 'val'),
+            'nc': 10,
+            'names': reduce(toobj  , categories, {})
+        }, ofile, explicit_start=True, encoding='utf8')
+            
+            
+def coco_kpt2yolo(srcdir = os.path.join('data', 'repo'), dstdir = os.path.join('data', 'yolo'), train_ratio = 0.8, val_ratio = 0.1):
+    src_imgdir = os.path.join(srcdir, 'images')
+    dstdir = os.path.join(dstdir, 'kpt')
+    datafile = os.path.join(dstdir, 'data.yaml')    
+    coco = COCO(os.path.join(srcdir,'coco-kpt-annotations.json'))
+    imgs = list(coco.imgs.values())
+    random.shuffle(imgs)
+    train_count = int(train_ratio * len(imgs))
+    val_count = int(val_ratio * len(imgs))
+    train_imgs = imgs[:train_count]
+    val_imgs = imgs[train_count: train_count + val_count]
+    test_imgs = imgs[train_count + val_count : ]
+    def generate(split, images):
+        def cvkpt(idx, coord):
+            if idx % 3 == 0:
+                return coord / imgw
+            elif idx % 3 == 1:
+                return coord / imgh
+            elif idx % 3 == 2:
+                # Visibility flag (0 = not labeled, 1 = labeled but not visible, 2 = labeled and visible)
+                return 0
+        for img in images:
+            shutil.copy(os.path.join(src_imgdir, img), os.path.join(dstdir, 'images', split, img))
+            lblfile, ext = os.path.splitext(img['file_name'])
+            lblfile = os.path.join(dstdir, 'labels', split, f'{lblfile}.txt')
+            img_ids = coco.getImgIds(imgIds=[img['file_name']])
+            ann_ids = coco.getAnnIds(imgIds=img_ids)
+            anns = coco.loadAnns(ann_ids)
+            imgh = img['height']
+            imgw = img['width']
+            coco_anns = []
+            for ann in anns:
+                category_id = ann['category_id']
+                keypoints = ann['keypoints']
+                yolo_line = [category_id]
+                yolo_line.extend(map(cvkpt, enumerate(keypoints)))
+                coco_anns.append(yolo_line)
+            with open(lblfile, 'w') as file:                    
+                file.writelines([" ".join(map(str, a)) for a in coco_anns])
+    generate(train_imgs)
+    generate(val_imgs)
+    generate(test_imgs)
+    # write out data.yaml
+    category_ids = coco.getCatIds()
+    categories = coco.loadCats(category_ids)
+    with open(datafile, 'w') as ofile:
+        def toobj(a, c):
+            a[c['id']] = c['name']
+            return a
+        yaml.dump({
+            'path': dstdir,
+            'train': os.path.join(dstdir, 'images', 'train'),
+            'val': os.path.join(dstdir, 'images', 'val'),
+            'nc': 10,
+            'names': reduce(toobj  , categories, {})
+        }, ofile, explicit_start=True, encoding='utf8')
+
+
+
     
