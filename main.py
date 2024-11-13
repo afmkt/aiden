@@ -1,6 +1,6 @@
-from src.prepare import normalize_cvat
+from src.train import train
 def main():
-    print("Hello from aiden!")
+    train('kpt')
 
 
 if __name__ == "__main__":

@@ -316,10 +316,10 @@ def coco_seg2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
             a[c['id']] = c['name']
             return a
         yaml.dump({
-            'path': dstdir,
-            'train': os.path.join(dstdir, 'images', 'train'),
-            'val': os.path.join(dstdir, 'images', 'val'),
-            'test': os.path.join(dstdir, 'images', 'test'),
+            'path': os.path.join('yolo', 'seg'),
+            'train': os.path.join('images', 'train'),
+            'val': os.path.join('images', 'val'),
+            'test': os.path.join('images', 'test'),
             'nc': len(categories),
             'names': reduce(toobj  , categories, {})
         }, ofile, explicit_start=True, allow_unicode=True)
@@ -354,6 +354,7 @@ def coco_kpt2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
                 return 0
         os.makedirs(os.path.join(dstdir, 'images', split), exist_ok=True)
         os.makedirs(os.path.join(dstdir, 'labels', split), exist_ok=True)
+        kl = None
         for img in tqdm(images, desc=f'Processing kpt dataset for {split}'):
             shutil.copy(os.path.join(src_imgdir, img['file_name']), os.path.join(dstdir, 'images', split, img['file_name']))
             lblfile, ext = os.path.splitext(img['file_name'])
@@ -367,12 +368,15 @@ def coco_kpt2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
             for ann in anns:
                 category_id = ann['category_id']
                 keypoints = ann['keypoints']
+                if kl is None:
+                    kl = len(keypoints)
                 yolo_line = [category_id]
                 yolo_line.extend(map(cvkpt, enumerate(keypoints)))
                 coco_anns.append(yolo_line)
             with open(lblfile, 'w') as file:    
                 file.writelines([" ".join(map(str, a)) for a in coco_anns])
-    generate('train', train_imgs)
+        return kl
+    kpt_length = generate('train', train_imgs)
     generate('val', val_imgs)
     generate('test', test_imgs)
     # write out data.yaml
@@ -383,10 +387,11 @@ def coco_kpt2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
             a[c['id']] = c['name']
             return a
         yaml.dump({
-            'path': dstdir,
-            'train': os.path.join(dstdir, 'images', 'train'),
-            'val': os.path.join(dstdir, 'images', 'val'),
-            'test': os.path.join(dstdir, 'images', 'test'),
+            'path': os.path.join('yolo', 'kpt'),
+            'train': os.path.join('images', 'train'),
+            'val': os.path.join('images', 'val'),
+            'test': os.path.join('images', 'test'),
+            'kpt_shape': [kpt_length, 3],
             'nc': len(categories),
             'names': reduce(toobj  , categories, {})
         }, ofile, explicit_start=True, allow_unicode=True)
