@@ -417,7 +417,7 @@ def yolo_cat_kpt(dir = YOLO_DIR):
         os.makedirs(os.path.join(YOLO_DIR, f'kpt-{cid}'), exist_ok=True)
         with open(os.path.join(YOLO_DIR, f'kpt-{cid}', 'data.yaml'), 'w') as ofile:
             yaml.dump({
-                'path': os.path.join('yolo', 'kpt'),
+                'path': os.path.join('yolo', f'kpt-{cid}'),
                 'train': os.path.join('images', 'train'),
                 'val': os.path.join('images', 'val'),
                 'test': os.path.join('images', 'test'),
