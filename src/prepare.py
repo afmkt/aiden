@@ -453,9 +453,4 @@ def yolo_cat_kpt(dir = YOLO_DIR):
             
             
             
-            datayaml = os.path.join(YOLO_DIR, f'kpt-{cid}', 'data.yaml')
-
-        
-
-            pass
 
