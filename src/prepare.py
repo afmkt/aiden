@@ -407,5 +407,55 @@ def coco_kpt2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
         }, ofile, explicit_start=True, allow_unicode=True)
 
 
+def yolo_cat_kpt(dir = YOLO_DIR):
+    with open(os.path.join(dir, 'kpt', 'data.yaml')) as stream:
+        try:
+            data = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+    for cid, cstr in data['names'].items():
+        with open(os.path.join(YOLO_DIR, f'kpt-{cid}', 'data.yaml'), 'w') as ofile:
+            yaml.dump({
+                'path': os.path.join('yolo', 'kpt'),
+                'train': os.path.join('images', 'train'),
+                'val': os.path.join('images', 'val'),
+                'test': os.path.join('images', 'test'),
+                'kpt_shape': data['kpt_shape'],
+                'nc': 1,
+                'names': {
+                    f'{cid}': cstr
+                }
+            }, ofile, explicit_start=True, allow_unicode=True)
+        for split in ['train' 'val', 'test']:
+            srcimgdir = os.path.join(dir, 'kpt', 'images', split)
+            srcimgnames = os.listdir(srcimgdir)
+            srclbldir = os.path.join(dir, 'kpt', 'labels', split)
+            srclblnames = os.listdir(srclbldir)
+            imgdir = os.path.join(YOLO_DIR, f'kpt-{cid}', 'images', split)
+            lbldir = os.path.join(YOLO_DIR, f'kpt-{cid}', 'labels', split)
+            for lblfile in srclblnames:
+                with open(os.path.join(srclbldir, lblfile), 'r') as f:
+                    lns = filter(lambda ln: ln.split(' ')[0].strip() == str(cid), f)
+                if len(lns) > 0:
+                    with open(os.path.join(lbldir, lblfile), 'w') as file:    
+                        file.writelines(lns)
+                    base, ext = os.path.splitext(lblfile)
+                    for n in srcimgnames:
+                        b, _ = os.splitext(os.path.basename(n))
+                        if b == base:
+                            shutil.copy(os.path.join(srcimgdir, n), os.path.join(imgdir, n))
+                            break
+            
+        
 
-    
+            
+            
+            
+            
+            
+            datayaml = os.path.join(YOLO_DIR, f'kpt-{cid}', 'data.yaml')
+
+        
+
+            pass
+
