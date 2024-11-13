@@ -414,6 +414,7 @@ def yolo_cat_kpt(dir = YOLO_DIR):
         except yaml.YAMLError as exc:
             print(exc)
     for cid, cstr in data['names'].items():
+        os.makedirs(os.path.join(YOLO_DIR, f'kpt-{cid}'), exist_ok=True)
         with open(os.path.join(YOLO_DIR, f'kpt-{cid}', 'data.yaml'), 'w') as ofile:
             yaml.dump({
                 'path': os.path.join('yolo', 'kpt'),
@@ -426,22 +427,24 @@ def yolo_cat_kpt(dir = YOLO_DIR):
                     f'{cid}': cstr
                 }
             }, ofile, explicit_start=True, allow_unicode=True)
-        for split in ['train' 'val', 'test']:
+        for split in ['train', 'val', 'test']:
             srcimgdir = os.path.join(dir, 'kpt', 'images', split)
             srcimgnames = os.listdir(srcimgdir)
             srclbldir = os.path.join(dir, 'kpt', 'labels', split)
             srclblnames = os.listdir(srclbldir)
             imgdir = os.path.join(YOLO_DIR, f'kpt-{cid}', 'images', split)
             lbldir = os.path.join(YOLO_DIR, f'kpt-{cid}', 'labels', split)
+            os.makedirs(imgdir, exist_ok=True)
+            os.makedirs(lbldir, exist_ok=True)
             for lblfile in srclblnames:
                 with open(os.path.join(srclbldir, lblfile), 'r') as f:
-                    lns = filter(lambda ln: ln.split(' ')[0].strip() == str(cid), f)
+                    lns = list(filter(lambda ln: ln.split(' ')[0].strip() == str(cid), f))
                 if len(lns) > 0:
                     with open(os.path.join(lbldir, lblfile), 'w') as file:    
                         file.writelines(lns)
                     base, ext = os.path.splitext(lblfile)
                     for n in srcimgnames:
-                        b, _ = os.splitext(os.path.basename(n))
+                        b, _ = os.path.splitext(os.path.basename(n))
                         if b == base:
                             shutil.copy(os.path.join(srcimgdir, n), os.path.join(imgdir, n))
                             break
