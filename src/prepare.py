@@ -160,11 +160,12 @@ def seg2kpt(seg: List[Tuple[float, float]], count: int)->List[float]:
     new_i = np.linspace(0, len(pnts) - 1, count)
     new_x = cs_x(new_i) 
     new_y = cs_y(new_i)
-    # [x1, y1, 2, x2, y2, 2, ...]
-    # 0: Keypoint is not visible.
-    # 1: Keypoint is visible and labeled.
-    # 2: Keypoint is visible but occluded (for instance, partially hidden behind an object or another body part).
-    return [r for lst in [(*t, 1) for t in zip(new_x, new_y)] for r in lst]
+    # [x1, y1, x2, y2, ...]
+    # we don't use visible flag
+    ## 0: Keypoint is not visible.
+    ## 1: Keypoint is visible and labeled.
+    ## 2: Keypoint is visible but occluded (for instance, partially hidden behind an object or another body part).
+    return [r for lst in zip(new_x, new_y) for r in lst]
 
 def cvat2coco_kpt(srcdir: str = WORKING_DIR, kpt_count: int = 34):
     xmlfile = os.path.join(srcdir, 'annotations.xml')
@@ -367,11 +368,20 @@ def coco_kpt2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
             coco_anns = []
             for ann in anns:
                 category_id = ann['category_id']
+                bbox = ann['bbox']  # [x, y, width, height]
+                minx, miny, w, h = tuple(bbox)
+                xcenter = minx + w / 2.0
+                ycenter = miny + h / 2.0
                 keypoints = ann['keypoints']
                 if kl is None:
                     kl = len(keypoints)
-                yolo_line = [category_id]
-                yolo_line.extend(map(cvkpt, enumerate(keypoints)))
+                yolo_line = [
+                    category_id, 
+                    xcenter / imgw, 
+                    ycenter / imgh, 
+                    w / imgw, 
+                    h / imgh]
+                yolo_line.extend([(n / imgw) if idx % 2 == 0 else (n / imgh) for idx, n in enumerate(keypoints)])
                 coco_anns.append(yolo_line)
             with open(lblfile, 'w') as file:    
                 file.writelines([" ".join(map(str, a)) for a in coco_anns])
@@ -391,7 +401,7 @@ def coco_kpt2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
             'train': os.path.join('images', 'train'),
             'val': os.path.join('images', 'val'),
             'test': os.path.join('images', 'test'),
-            'kpt_shape': [kpt_length, 3],
+            'kpt_shape': [kpt_length / 2, 2],
             'nc': len(categories),
             'names': reduce(toobj  , categories, {})
         }, ofile, explicit_start=True, allow_unicode=True)
