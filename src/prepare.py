@@ -271,7 +271,7 @@ def coco_seg2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
             shutil.copy(os.path.join(src_imgdir, img['file_name']), os.path.join(dstdir, 'images', split, img['file_name']))
             lblfile, ext = os.path.splitext(img['file_name'])
             lblfile = os.path.join(dstdir, 'labels', split, f'{lblfile}.txt')
-            img_ids = coco.getImgIds()
+            img_ids = coco.getImgIds(imgIds=[img['id']])
             ann_ids = coco.getAnnIds(imgIds=img_ids)
             anns = coco.loadAnns(ann_ids)
             imgh = img['height']
@@ -357,7 +357,7 @@ def coco_kpt2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
             shutil.copy(os.path.join(src_imgdir, img['file_name']), os.path.join(dstdir, 'images', split, img['file_name']))
             lblfile, ext = os.path.splitext(img['file_name'])
             lblfile = os.path.join(dstdir, 'labels', split, f'{lblfile}.txt')
-            img_ids = coco.getImgIds()
+            img_ids = coco.getImgIds(imgIds=[img['id']])
             ann_ids = coco.getAnnIds(imgIds=img_ids)
             anns = coco.loadAnns(ann_ids)
             imgh = img['height']
