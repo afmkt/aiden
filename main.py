@@ -1,6 +1,6 @@
 from src.train import train
 def main():
-    train('seg')
+    train('kpt-0')
 
 
 if __name__ == "__main__":

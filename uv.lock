@@ -1765,7 +1765,7 @@ wheels = [
 
 [[package]]
 name = "ultralytics"
-version = "8.3.29"
+version = "8.3.30"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "matplotlib" },
@@ -1785,9 +1785,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "ultralytics-thop" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fe/96/a9ca51929f49078ddb786c9e0c2a3c573a9ebb45b3ced425c9bd9c60c7d8/ultralytics-8.3.29.tar.gz", hash = "sha256:1d1f0e907312da7dcb3543907d392ec89be62ab2cac8a9b25696304c17f8a71c", size = 765882 }
+sdist = { url = "https://files.pythonhosted.org/packages/ac/91/dcf0ef0d41725dbe0029d153dce966d9b483d76aae0f9edf51ae66ff0e6b/ultralytics-8.3.30.tar.gz", hash = "sha256:641a195cc2e06530307cde8b7e2e4fa3aea214752e9f74254a1ee6f051719126", size = 767366 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e6/cf/6b00eadc2dba120b66b842be8f47386f7ea19e861ec4f7711b997b7b707a/ultralytics-8.3.29-py3-none-any.whl", hash = "sha256:c428f704dc40ee6608c86c2bbaf84163f4d2c7d3999c7c46b902bc1a9ebd294b", size = 883819 },
+    { url = "https://files.pythonhosted.org/packages/d8/4d/6fea8dc1b21e2283a9868094d4df0f4403fedf32311088fe3fbef14613aa/ultralytics-8.3.30-py3-none-any.whl", hash = "sha256:1536415483145f5f43ac748b3fc4d7b3ce7d0366162efa8b8d46fbe0f72e179d", size = 885908 },
 ]
 
 [[package]]
