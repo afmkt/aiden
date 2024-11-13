@@ -161,7 +161,10 @@ def seg2kpt(seg: List[Tuple[float, float]], count: int)->List[float]:
     new_x = cs_x(new_i) 
     new_y = cs_y(new_i)
     # [x1, y1, 2, x2, y2, 2, ...]
-    return [r for lst in [(*t, 2) for t in zip(new_x, new_y)] for r in lst]
+    # 0: Keypoint is not visible.
+    # 1: Keypoint is visible and labeled.
+    # 2: Keypoint is visible but occluded (for instance, partially hidden behind an object or another body part).
+    return [r for lst in [(*t, 1) for t in zip(new_x, new_y)] for r in lst]
 
 def cvat2coco_kpt(srcdir: str = WORKING_DIR, kpt_count: int = 34):
     xmlfile = os.path.join(srcdir, 'annotations.xml')
@@ -329,6 +332,11 @@ def coco_kpt2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
             elif idx % 3 == 1:
                 return coord / imgh
             elif idx % 3 == 2:
+                # the input of this function is encoded in coco
+                # 0: Keypoint is not visible.
+                # 1: Keypoint is visible and labeled.
+                # 2: Keypoint is visible but occluded (for instance, partially hidden behind an object or another body part).
+                # the output of this function is in yolo
                 # Visibility flag (0 = not labeled, 1 = labeled but not visible, 2 = labeled and visible)
                 return 0
         for img in images:
