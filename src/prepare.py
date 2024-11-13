@@ -319,6 +319,7 @@ def coco_seg2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
             'path': dstdir,
             'train': os.path.join(dstdir, 'images', 'train'),
             'val': os.path.join(dstdir, 'images', 'val'),
+            'test': os.path.join(dstdir, 'images', 'test'),
             'nc': len(categories),
             'names': reduce(toobj  , categories, {})
         }, ofile, explicit_start=True, allow_unicode=True)
@@ -385,6 +386,7 @@ def coco_kpt2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
             'path': dstdir,
             'train': os.path.join(dstdir, 'images', 'train'),
             'val': os.path.join(dstdir, 'images', 'val'),
+            'test': os.path.join(dstdir, 'images', 'test'),
             'nc': len(categories),
             'names': reduce(toobj  , categories, {})
         }, ofile, explicit_start=True, allow_unicode=True)
