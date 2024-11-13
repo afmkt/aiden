@@ -265,11 +265,13 @@ def coco_seg2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
     val_imgs = imgs[train_count: train_count + val_count]
     test_imgs = imgs[train_count + val_count : ]
     def generate(split, images):
-        for img in images:
-            shutil.copy(os.path.join(src_imgdir, img), os.path.join(dstdir, 'images', split, img))
+        os.makedirs(os.path.join(dstdir, 'images', split), exist_ok=True)
+        os.makedirs(os.path.join(dstdir, 'labels', split), exist_ok=True)
+        for img in tqdm(images, desc=f'Processing seg dataset for {split}'):
+            shutil.copy(os.path.join(src_imgdir, img['file_name']), os.path.join(dstdir, 'images', split, img['file_name']))
             lblfile, ext = os.path.splitext(img['file_name'])
             lblfile = os.path.join(dstdir, 'labels', split, f'{lblfile}.txt')
-            img_ids = coco.getImgIds(imgIds=[img['file_name']])
+            img_ids = coco.getImgIds()
             ann_ids = coco.getAnnIds(imgIds=img_ids)
             anns = coco.loadAnns(ann_ids)
             imgh = img['height']
@@ -282,21 +284,30 @@ def coco_seg2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
                 xcenter = minx + w / 2.0
                 ycenter = miny + h / 2.0
                 segmentation = ann['segmentation']  
+                if len(segmentation) == 1:
+                    segmentation = segmentation[0]
+                elif len(segmentation) > 1:
+                    all_points = []
+                    for p in segmentation:
+                        all_points.extend(zip(p[::2], p[1::2]))
+                    x, y = Polygon(all_points).xy
+                    # convert [(x1, y1), (x2, y2) ...] to [x1, y1, x2, y2 ...]
+                    segmentation = [item for sublist in zip(x, y) for item in sublist]
+                else:
+                    raise Exception(f'Invalid number({len(segmentation)}) of polygons in segmentation')
                 yolo_line = [
                     category_id, 
                     xcenter / imgw, 
                     ycenter / imgh, 
                     w / imgw, 
                     h / imgh]
-                yolo_line.extend(map(
-                        lambda idx, n: (n / imgw) if idx % 2 == 0 else (n / imgh), 
-                        enumerate(segmentation)))
+                yolo_line.extend([(n / imgw) if idx % 2 == 0 else (n / imgh) for idx, n in enumerate(segmentation)])
                 coco_anns.append(yolo_line)
             with open(lblfile, 'w') as file:                    
                 file.writelines([" ".join(map(str, a)) for a in coco_anns])
-    generate(train_imgs)
-    generate(val_imgs)
-    generate(test_imgs)
+    generate('train', train_imgs)
+    generate('val', val_imgs)
+    generate('test', test_imgs)
     # write out data.yaml
     category_ids = coco.getCatIds()
     categories = coco.loadCats(category_ids)
@@ -308,9 +319,9 @@ def coco_seg2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
             'path': dstdir,
             'train': os.path.join(dstdir, 'images', 'train'),
             'val': os.path.join(dstdir, 'images', 'val'),
-            'nc': 10,
+            'nc': len(categories),
             'names': reduce(toobj  , categories, {})
-        }, ofile, explicit_start=True, encoding='utf8')
+        }, ofile, explicit_start=True, allow_unicode=True)
             
             
 def coco_kpt2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, val_ratio = 0.1):
@@ -326,7 +337,8 @@ def coco_kpt2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
     val_imgs = imgs[train_count: train_count + val_count]
     test_imgs = imgs[train_count + val_count : ]
     def generate(split, images):
-        def cvkpt(idx, coord):
+        def cvkpt(tup):
+            idx, coord = tup
             if idx % 3 == 0:
                 return coord / imgw
             elif idx % 3 == 1:
@@ -339,11 +351,13 @@ def coco_kpt2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
                 # the output of this function is in yolo
                 # Visibility flag (0 = not labeled, 1 = labeled but not visible, 2 = labeled and visible)
                 return 0
-        for img in images:
-            shutil.copy(os.path.join(src_imgdir, img), os.path.join(dstdir, 'images', split, img))
+        os.makedirs(os.path.join(dstdir, 'images', split), exist_ok=True)
+        os.makedirs(os.path.join(dstdir, 'labels', split), exist_ok=True)
+        for img in tqdm(images, desc=f'Processing kpt dataset for {split}'):
+            shutil.copy(os.path.join(src_imgdir, img['file_name']), os.path.join(dstdir, 'images', split, img['file_name']))
             lblfile, ext = os.path.splitext(img['file_name'])
             lblfile = os.path.join(dstdir, 'labels', split, f'{lblfile}.txt')
-            img_ids = coco.getImgIds(imgIds=[img['file_name']])
+            img_ids = coco.getImgIds()
             ann_ids = coco.getAnnIds(imgIds=img_ids)
             anns = coco.loadAnns(ann_ids)
             imgh = img['height']
@@ -355,11 +369,11 @@ def coco_kpt2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
                 yolo_line = [category_id]
                 yolo_line.extend(map(cvkpt, enumerate(keypoints)))
                 coco_anns.append(yolo_line)
-            with open(lblfile, 'w') as file:                    
+            with open(lblfile, 'w') as file:    
                 file.writelines([" ".join(map(str, a)) for a in coco_anns])
-    generate(train_imgs)
-    generate(val_imgs)
-    generate(test_imgs)
+    generate('train', train_imgs)
+    generate('val', val_imgs)
+    generate('test', test_imgs)
     # write out data.yaml
     category_ids = coco.getCatIds()
     categories = coco.loadCats(category_ids)
@@ -371,9 +385,9 @@ def coco_kpt2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
             'path': dstdir,
             'train': os.path.join(dstdir, 'images', 'train'),
             'val': os.path.join(dstdir, 'images', 'val'),
-            'nc': 10,
+            'nc': len(categories),
             'names': reduce(toobj  , categories, {})
-        }, ofile, explicit_start=True, encoding='utf8')
+        }, ofile, explicit_start=True, allow_unicode=True)
 
 
 
