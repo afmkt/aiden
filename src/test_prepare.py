@@ -1,4 +1,4 @@
-from prepare import normalize_cvat, cvat2coco_seg, cvat2coco_kpt, coco_seg2yolo
+from prepare import normalize_cvat, cvat2coco_seg, cvat2coco_kpt, coco_seg2yolo, coco_kpt2yolo
 from checkcoco import validate_coco_seg, validate_coco_kpt
 srcdir = normalize_cvat()
 cvat2coco_seg()
@@ -8,5 +8,8 @@ if 1==0:
     validate_coco_seg()
 elif 1==0:
     validate_coco_kpt()
-else:
+elif 1==0:
+    coco_kpt2yolo()
+elif 1==0:
     coco_seg2yolo()
+

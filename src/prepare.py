@@ -15,6 +15,9 @@ from pycocotools.coco import COCO
 import yaml
 from functools import reduce
 
+ORIGINAL_CVAT_DIR = os.path.join('data', 'lowerboneandImplant')
+WORKING_DIR = os.path.join('data', 'repo')
+YOLO_DIR = os.path.join('data', 'yolo')
 
 def cpfile(src: str, dst: str)-> Tuple[str, str, str] | None:
     if os.path.isfile(src) and os.path.isdir(dst):
@@ -29,7 +32,7 @@ def init_dir(dir: str)-> None:
         shutil.rmtree(dir)
     os.makedirs(dir, exist_ok=True)
 
-def normalize_cvat(srcdir: str = os.path.join('data', 'lowerboneandImplant'), dstdir : str = os.path.join('data', 'repo')):
+def normalize_cvat(srcdir: str = ORIGINAL_CVAT_DIR, dstdir : str = WORKING_DIR):
     print('''Normalize CVAT dataset bysaving 
 1. Save images with md5 checksum as file name
 2. Removing non-existing image from XML annotations.xml''')
@@ -65,7 +68,7 @@ def normalize_cvat(srcdir: str = os.path.join('data', 'lowerboneandImplant'), ds
     print(f'Normalized CVAT dataset in {dstdir}')
 
 
-def cvat2coco_seg(srcdir: str = os.path.join('data', 'repo')):
+def cvat2coco_seg(srcdir: str = WORKING_DIR):
     xmlfile = os.path.join(srcdir, 'annotations.xml')
     cvat = xml.etree.ElementTree.parse(xmlfile, parser=xml.etree.ElementTree.XMLParser(encoding="utf-8"))
     root = cvat.getroot()
@@ -160,7 +163,7 @@ def seg2kpt(seg: List[Tuple[float, float]], count: int)->List[float]:
     # [x1, y1, 2, x2, y2, 2, ...]
     return [r for lst in [(*t, 2) for t in zip(new_x, new_y)] for r in lst]
 
-def cvat2coco_kpt(srcdir: str = os.path.join('data', 'repo'), kpt_count: int = 34):
+def cvat2coco_kpt(srcdir: str = WORKING_DIR, kpt_count: int = 34):
     xmlfile = os.path.join(srcdir, 'annotations.xml')
     cvat = xml.etree.ElementTree.parse(xmlfile, parser=xml.etree.ElementTree.XMLParser(encoding="utf-8"))
     root = cvat.getroot()
@@ -246,7 +249,7 @@ def cvat2coco_kpt(srcdir: str = os.path.join('data', 'repo'), kpt_count: int = 3
 
 
 
-def coco_seg2yolo(srcdir = os.path.join('data', 'repo'), dstdir = os.path.join('data', 'yolo'), train_ratio = 0.8, val_ratio = 0.1):
+def coco_seg2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, val_ratio = 0.1):
     src_imgdir = os.path.join(srcdir, 'images')
     dstdir = os.path.join(dstdir, 'seg')
     datafile = os.path.join(dstdir, 'data.yaml')    
@@ -284,7 +287,7 @@ def coco_seg2yolo(srcdir = os.path.join('data', 'repo'), dstdir = os.path.join('
                     h / imgh]
                 yolo_line.extend(map(
                         lambda idx, n: (n / imgw) if idx % 2 == 0 else (n / imgh), 
-                        enumerate(segmentation))))
+                        enumerate(segmentation)))
                 coco_anns.append(yolo_line)
             with open(lblfile, 'w') as file:                    
                 file.writelines([" ".join(map(str, a)) for a in coco_anns])
@@ -307,7 +310,7 @@ def coco_seg2yolo(srcdir = os.path.join('data', 'repo'), dstdir = os.path.join('
         }, ofile, explicit_start=True, encoding='utf8')
             
             
-def coco_kpt2yolo(srcdir = os.path.join('data', 'repo'), dstdir = os.path.join('data', 'yolo'), train_ratio = 0.8, val_ratio = 0.1):
+def coco_kpt2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, val_ratio = 0.1):
     src_imgdir = os.path.join(srcdir, 'images')
     dstdir = os.path.join(dstdir, 'kpt')
     datafile = os.path.join(dstdir, 'data.yaml')    

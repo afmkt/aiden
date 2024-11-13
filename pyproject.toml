@@ -5,9 +5,15 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "fastapi>=0.115.4",
+    "flet>=0.24.1",
     "gradio>=5.5.0",
+    "pillow>=11.0.0",
     "pycocotools>=2.0.8",
+    "pydantic>=2.9.2",
+    "python-multipart>=0.0.12",
     "pyyaml>=6.0.2",
+    "requests>=2.32.3",
     "shapely>=2.0.6",
     "supervision>=0.24.0",
     "torch>=2.5.1",
@@ -15,6 +21,7 @@ dependencies = [
     "torchvision>=0.20.1",
     "tqdm>=4.67.0",
     "ultralytics>=8.3.28",
+    "uvicorn>=0.32.0",
 ]
 
 [dependency-groups]
