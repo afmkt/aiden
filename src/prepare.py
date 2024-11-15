@@ -279,6 +279,7 @@ def coco_seg2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
             imgw = img['width']
             coco_anns = []
             for ann in anns:
+                # https://docs.ultralytics.com/datasets/segment/#ultralytics-yolo-format
                 category_id = ann['category_id']
                 bbox = ann['bbox']  # [x, y, width, height]
                 minx, miny, w, h = tuple(bbox)
@@ -298,10 +299,11 @@ def coco_seg2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
                     raise Exception(f'Invalid number({len(segmentation)}) of polygons in segmentation')
                 yolo_line = [
                     category_id, 
-                    xcenter / imgw, 
-                    ycenter / imgh, 
-                    w / imgw, 
-                    h / imgh]
+                    # xcenter / imgw, 
+                    # ycenter / imgh, 
+                    # w / imgw, 
+                    # h / imgh
+                    ]
                 yolo_line.extend([(n / imgw) if idx % 2 == 0 else (n / imgh) for idx, n in enumerate(segmentation)])
                 coco_anns.append(yolo_line)
             with open(lblfile, 'w') as file:                    
@@ -367,6 +369,7 @@ def coco_kpt2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
             imgw = img['width']
             coco_anns = []
             for ann in anns:
+                # https://docs.ultralytics.com/datasets/pose/#ultralytics-yolo-format
                 category_id = ann['category_id']
                 bbox = ann['bbox']  # [x, y, width, height]
                 minx, miny, w, h = tuple(bbox)

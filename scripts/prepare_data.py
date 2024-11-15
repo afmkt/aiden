@@ -16,8 +16,9 @@ def main() -> None:
     if 1==0:
         validate_coco_seg()
         validate_coco_kpt()
-    if 1==0:
-        shutil.rmtree(YOLO_DIR)
+    if 1==1:
+        if os.path.isdir(YOLO_DIR):
+            shutil.rmtree(YOLO_DIR)
         coco_kpt2yolo()
         coco_seg2yolo()
     if 1==0:
