@@ -281,10 +281,10 @@ def coco_seg2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
             for ann in anns:
                 # https://docs.ultralytics.com/datasets/segment/#ultralytics-yolo-format
                 category_id = ann['category_id']
-                bbox = ann['bbox']  # [x, y, width, height]
-                minx, miny, w, h = tuple(bbox)
-                xcenter = minx + w / 2.0
-                ycenter = miny + h / 2.0
+                # bbox = ann['bbox']  # [x, y, width, height]
+                # minx, miny, w, h = tuple(bbox)
+                # xcenter = minx + w / 2.0
+                # ycenter = miny + h / 2.0
                 segmentation = ann['segmentation']  
                 if len(segmentation) == 1:
                     segmentation = segmentation[0]
@@ -306,8 +306,11 @@ def coco_seg2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
                     ]
                 yolo_line.extend([(n / imgw) if idx % 2 == 0 else (n / imgh) for idx, n in enumerate(segmentation)])
                 coco_anns.append(yolo_line)
-            with open(lblfile, 'w') as file:                    
-                file.writelines([" ".join(map(str, a)) for a in coco_anns])
+
+            with open(lblfile, 'w') as file:   
+                tmp = [" ".join(map(str, a)) for a in coco_anns]
+                tmp = [f'{s}\n' for s in tmp]
+                file.writelines(tmp)
     generate('train', train_imgs)
     generate('val', val_imgs)
     generate('test', test_imgs)
@@ -386,8 +389,10 @@ def coco_kpt2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
                     h / imgh]
                 yolo_line.extend([(n / imgw) if idx % 2 == 0 else (n / imgh) for idx, n in enumerate(keypoints)])
                 coco_anns.append(yolo_line)
-            with open(lblfile, 'w') as file:    
-                file.writelines([" ".join(map(str, a)) for a in coco_anns])
+            with open(lblfile, 'w') as file:   
+                tmp = [" ".join(map(str, a)) for a in coco_anns]
+                tmp = [f'{s}\n' for s in tmp]
+                file.writelines(tmp)
         return kl
     kpt_length = generate('train', train_imgs)
     generate('val', val_imgs)
@@ -443,8 +448,8 @@ def yolo_cat_kpt(dir = YOLO_DIR):
                 with open(os.path.join(srclbldir, lblfile), 'r') as f:
                     lns = list(filter(lambda ln: ln.split(' ')[0].strip() == str(cid), f))
                 if len(lns) > 0:
-                    with open(os.path.join(lbldir, lblfile), 'w') as file:    
-                        file.writelines(lns)
+                    with open(os.path.join(lbldir, lblfile), 'w') as file:   
+                        file.writelines([f'{s}\n' for s in lns])
                     base, ext = os.path.splitext(lblfile)
                     for n in srcimgnames:
                         b, _ = os.path.splitext(os.path.basename(n))
@@ -457,6 +462,28 @@ def yolo_cat_kpt(dir = YOLO_DIR):
             
             
             
+def main() -> None:
+    from vis_coco import validate_coco_seg, validate_coco_kpt
+    
+
+    if 1==0:
+        normalize_cvat()
+    if 1==0:
+        cvat2coco_seg()
+        cvat2coco_kpt()
+    if 1==0:
+        validate_coco_seg()
+        validate_coco_kpt()
+    if 1==1:
+        if os.path.isdir(YOLO_DIR):
+            shutil.rmtree(YOLO_DIR)
+        coco_kpt2yolo()
+        coco_seg2yolo()
+    if 1==0:
+        yolo_cat_kpt()
+
+if __name__ == "__main__":
+    main()
             
             
 

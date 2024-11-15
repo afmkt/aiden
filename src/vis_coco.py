@@ -41,47 +41,6 @@ def validate_category_id(coco):
         if ann['category_id'] not in category_ids:
             raise Exception(f"Invalid category_id {ann['category_id']} in annotation {ann['id']}")
 
-def visualize(imgf, result = [], annotation = []):
-
-    image = cv2.imread(imgf)
-    height, width, channels = image.shape
-    plt.imshow(image[..., ::-1])
-    plt.axis('off')
-    for r in result:
-        cat = r['category']
-        seg = r['segments']
-        x, y = tuple([list(n) for n in zip(*seg)])
-        x = [int(i * width) for i in x]
-        y = [int(i * height) for i in y]
-        match cat['id']:
-            case 0:
-                plt.plot(x, y, color='red')
-                pass
-            case 1:
-                plt.plot(x, y, color='yello')
-                pass
-            case 2:
-                plt.plot(x, y, color='green')
-                pass
-            case 3:
-                plt.plot(x, y, color='white')
-                pass
-    for a in annotation:
-        cat = a['category']
-        seg = a['segments']
-        x, y = tuple([list(n) for n in zip(*seg)])
-        x = [int(i * width) for i in x]
-        y = [int(i * height) for i in y]
-        match cat['id']:
-            case 0:
-                plt.plot(x, y, color='blue', marker='*')
-            case 1:
-                plt.plot(x, y, color='yello', marker='*')
-            case 2:
-                plt.plot(x, y, color='green', marker='*')
-            case 3:
-                plt.plot(x, y, color='white', marker='*')
-    plt.show()
 
 def validate_coco_seg(annfile: str = 'data/repo/coco-seg-annotations.json', img_dir = 'data/repo/images'):
     coco = COCO(annfile)
