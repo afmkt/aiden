@@ -7,7 +7,7 @@ import yaml
 import matplotlib.pyplot as plt
 import matplotlib
 import cv2
-
+from typing import Dict
 matplotlib.rc('font', family='Hiragino Sans GB')
 
 model = Model()
@@ -61,6 +61,42 @@ def predict(imgf, precision = 4):
     } for b, m in zip(r.boxes, r.masks)] for r in result]
     return ret[0]
 
+def load_ann(imgf:str, datayaml: str | Dict | None = os.path.join(YOLO_DIR, 'seg', 'data.yaml'), precision = 4):
+    if not isinstance(datayaml, dict):
+        if isinstance(datayaml, str):
+            with open(datayaml) as stream:
+                try:
+                    datayaml = yaml.safe_load(stream)
+                except yaml.YAMLError as exc:
+                    print(exc)
+        elif datayaml is None:
+            with open(os.path.join(YOLO_DIR, 'seg', 'data.yaml')) as stream:
+                try:
+                    datayaml = yaml.safe_load(stream)
+                except yaml.YAMLError as exc:
+                    print(exc)
+        else:
+            raise Exception(f'datayaml{datayaml} must be a Dict or a str or None')
+    categories = datayaml['names']
+    _, filename = os.path.split(imgf)
+    base, _ = os.path.splitext(filename)
+    for split in ['test', 'train', 'val']:
+        lbldir = os.path.join(YOLO_DIR, 'seg', 'labels', split)
+        for fname in os.listdir(lbldir):
+            b, e = os.path.splitext(fname)
+            if b == base:
+                with open(os.path.join(lbldir, fname), 'r') as f:
+                    lns = f.readlines()
+                lns = [ln.split(" ") for ln in lns]
+                lns = [list(map(float, ln)) for ln in lns]
+                lns = [[round(i, precision) for i in ln] for ln in lns]
+                return [{
+                    'category': {
+                        'id':int(ln[0]),
+                        'name': categories[(int(ln[0]))]
+                    },
+                    'segments' : list(zip(ln[1::2], ln[2::2]))
+                } for ln in lns]
 
 def load_dataset(split = 'test', precision = 4):
     ret = []
@@ -69,24 +105,12 @@ def load_dataset(split = 'test', precision = 4):
             datayaml = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
-    categories = datayaml['names']
     imgdir = os.path.join(YOLO_DIR, 'seg', 'images', split)
     lbldir = os.path.join(YOLO_DIR, 'seg', 'labels', split)
     imgfiles = [os.path.splitext(f) for f in os.listdir(os.path.join(YOLO_DIR, 'seg', 'images', split))]
     files = [ (os.path.join(imgdir, f'{base}{ext}'), os.path.join(lbldir, f'{base}.txt')) for base, ext in imgfiles]
     for imgf, lblf in files:
-        with open(lblf, 'r') as f:
-            lns = f.readlines()
-        lns = [ln.split(" ") for ln in lns]
-        lns = [list(map(float, ln)) for ln in lns]
-        lns = [[round(i, precision) for i in ln] for ln in lns]
-        lns = [{
-            'category': {
-                'id':int(ln[0]),
-                'name': categories[(int(ln[0]))]
-            },
-            'segments' : list(zip(ln[1::2], ln[2::2]))
-        } for ln in lns]
+        lns = load_ann(imgf, datayaml, precision = precision)
         ret.append({
             'image_url': imgf,
             'annotation': lns

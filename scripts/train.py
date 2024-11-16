@@ -7,10 +7,7 @@ import re
 from ultralytics import YOLO
 from src.prepare import YOLO_DIR
 def train(mode, epochs = 10):
-    if mode == 'seg':
-        model = YOLO('yolo11x-seg.pt')
-    elif re.search('kpt-[0-9]+', mode) is not None:
-        model = YOLO('yolo11x-pose.pt')
+    model = YOLO('yolo11x-seg.pt' if mode == 'seg' else 'yolo11x-pose.pt')
     start = time.time()
     results = model.train(
         data = os.path.join(YOLO_DIR, mode, 'data.yaml')
