@@ -15,7 +15,6 @@ model = Model()
 
 def visualize(imgf, result = [], annotation = []):
     def draw(x, y, cid, alpha, marker):
-        print(cid)
         match cid:
             case 0:
                 plt.plot(x, y, color='red', alpha=alpha, marker=marker)
@@ -29,7 +28,10 @@ def visualize(imgf, result = [], annotation = []):
     image = cv2.imread(imgf)
     height, width, channels = image.shape
     plt.imshow(image[..., ::-1])
-    plt.text(0, 0, os.path.splitext(os.path.basename(imgf))[0], color='black')
+    if len(result) == 0:
+        plt.text(0, 0, f'{os.path.splitext(os.path.basename(imgf))[0]} annotation', color='black')
+    elif len(annotation) == 0:
+        plt.text(0, 0, f'{os.path.splitext(os.path.basename(imgf))[0]} prediction', color='black')
     plt.axis('off')
     for r in result:
         cat = r['category']
@@ -44,7 +46,7 @@ def visualize(imgf, result = [], annotation = []):
         x, y = tuple([list(n) for n in zip(*seg)])
         x = [int(i * width) for i in x]
         y = [int(i * height) for i in y]
-        draw(x,y, cat['id'], 0.2, '*')
+        draw(x,y, cat['id'], 1.0, '*')
     plt.show()
 
 
@@ -90,13 +92,18 @@ def load_ann(imgf:str, datayaml: str | Dict | None = os.path.join(YOLO_DIR, 'seg
                 lns = [ln.split(" ") for ln in lns]
                 lns = [list(map(float, ln)) for ln in lns]
                 lns = [[round(i, precision) for i in ln] for ln in lns]
-                return [{
+                ann =  [{
                     'category': {
                         'id':int(ln[0]),
                         'name': categories[(int(ln[0]))]
                     },
                     'segments' : list(zip(ln[1::2], ln[2::2]))
                 } for ln in lns]
+                imgdir = os.path.join(YOLO_DIR, 'seg', 'images', split)
+                for fname in os.listdir(imgdir):
+                    b, e = os.path.splitext(fname)
+                    if b == base:
+                        return ann, os.path.join(imgdir, fname)
 
 def load_dataset(split = 'test', precision = 4):
     ret = []
@@ -110,7 +117,7 @@ def load_dataset(split = 'test', precision = 4):
     imgfiles = [os.path.splitext(f) for f in os.listdir(os.path.join(YOLO_DIR, 'seg', 'images', split))]
     files = [ (os.path.join(imgdir, f'{base}{ext}'), os.path.join(lbldir, f'{base}.txt')) for base, ext in imgfiles]
     for imgf, lblf in files:
-        lns = load_ann(imgf, datayaml, precision = precision)
+        lns, _ = load_ann(imgf, datayaml, precision = precision)
         ret.append({
             'image_url': imgf,
             'annotation': lns
@@ -118,9 +125,16 @@ def load_dataset(split = 'test', precision = 4):
     return ret
 
 if __name__ == "__main__":
-    rst = load_dataset('train', 4)
-    for tmp in rst:
-        imgf = tmp['image_url']
-        annotation = tmp['annotation']
-        result = predict(imgf, 4)
-        visualize(imgf, [], annotation)
+    if False:
+        ann, imgf = load_ann('0265-3aba883537da7386a607802494ed5f11')
+        visualize(imgf, [], ann)
+        r = predict(imgf)
+        visualize(imgf, r)
+    else:
+        rst = load_dataset('train', 4)
+        for tmp in rst:
+            imgf = tmp['image_url']
+            annotation = tmp['annotation']
+            result = predict(imgf, 4)
+            visualize(imgf, [], annotation)
+            visualize(imgf, result)
