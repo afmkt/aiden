@@ -7,7 +7,7 @@ import yaml
 import matplotlib.pyplot as plt
 import matplotlib
 import cv2
-
+import numpy as np
 matplotlib.rc('font', family='Hiragino Sans GB')
 
 
@@ -64,6 +64,47 @@ class Model():
                     r['segments'] = p2
         return ret[0]
     
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (0, 0, 255)
+GREEN = (0, 255, 0)
+BLUE = (255, 0, 0)
+YELLOW = (0, 255, 255)
+MAGENTA = (255, 0, 255)
+CYAN = (255, 255, 0)        
+
+def display(image):
+    while(True):
+        cv2.imshow('image', image)
+        if cv2.waitKey(20) & 0xFF == 27:
+            break
+    cv2.destroyAllWindows()
+
+def plot_result(imgf, result = [], thickness = 2, clrmap = {
+    0: RED,
+    1: YELLOW,
+    2: GREEN,
+    3: WHITE
+}):
+    if isinstance(imgf, str):
+        image = cv2.imread(imgf)
+    else:
+        image = imgf
+    height, width, channels = image.shape
+    for r in result:
+        cat = r['category']
+        seg = r['segments']
+        x, y = tuple([list(n) for n in zip(*seg)])
+        x = [int(i * width) for i in x]
+        y = [int(i * height) for i in y]
+        pts = np.array(list(map(list, zip(x,y)))).reshape((-1, 1, 2))
+        cv2.polylines(image, 
+                    [pts], 
+                    color=clrmap[cat['id']], 
+                    isClosed=False, 
+                    thickness=thickness, 
+                    lineType=cv2.LINE_8)
+    return image
 
 def visualize(imgf, result = [], annotation = []):
     def draw(x, y, cid, alpha, marker):
@@ -78,12 +119,14 @@ def visualize(imgf, result = [], annotation = []):
                 plt.plot(x, y, color='white', alpha=alpha, marker=marker)
 
     image = cv2.imread(imgf)
-    height, width, channels = image.shape
-    plt.imshow(image[..., ::-1])
+
+    height, width, channels = image.shape    
+
     if len(result) == 0:
         plt.text(0, 0, f'{os.path.splitext(os.path.basename(imgf))[0]} annotation', color='black')
     elif len(annotation) == 0:
         plt.text(0, 0, f'{os.path.splitext(os.path.basename(imgf))[0]} prediction', color='black')
+    plt.imshow(image[..., ::-1])        
     plt.axis('off')
     for r in result:
         cat = r['category']

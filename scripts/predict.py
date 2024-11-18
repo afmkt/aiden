@@ -1,7 +1,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
-from src.inference import Model, load_ann, visualize
+from src.inference import Model, load_ann, visualize, plot_result
 from src.prepare import YOLO_DIR
 import yaml
 
@@ -29,10 +29,6 @@ def load_dataset(split = 'test', precision = 4):
     return ret
 
 
-
-
-
-
 if __name__ == "__main__":
     if False :
         ann, imgf = load_ann('0265-3aba883537da7386a607802494ed5f11')
@@ -45,5 +41,7 @@ if __name__ == "__main__":
             imgf = tmp['image_url']
             annotation = tmp['annotation']
             result = model.predict(imgf, 4)
-            visualize(imgf, [], annotation)
+            # visualize(imgf, [], annotation)
             visualize(imgf, result)
+            # plot_result(imgf, annotation)
+            # plot_result(imgf, result)
