@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 import matplotlib
 import cv2
 import numpy as np
+from shapely.geometry import Polygon
+from PIL import Image
+
 matplotlib.rc('font', family='Hiragino Sans GB')
 
 
@@ -17,21 +20,23 @@ class Model():
     def __init__(self, model_file = os.path.join('runs', 'segment', 'train', 'weights','best.pt')) -> None:
         self.model = YOLO(model_file)
 
-    def predict(self, img: str, precision = 4):
+    def predict(self, img: str | Image.Image, precision = 4):
         result = self.model(img) 
+        height, width = result[0].orig_shape
         ret = [
             [{
             'category': {
                 'id':int(b.cls[0].item()),
                 'name': r.names[int(b.cls[0].item())]
             },
-            'width': r.orig_shape[1],
-            'height': r.orig_shape[0],
             'confidence': round(b.conf[0].item(), precision),
             'segments': [tuple([round(e[0], precision), round(e[1], precision)]) for e in m.xyn[0]]
         } for b, m in zip(r.boxes, r.masks)] for r in result]
         for r in ret[0]:
-            if r['category']['id'] == 0:
+            if r['category']['id'] == 2:
+                minx, miny, maxx, maxy = Polygon(r['segments']).bounds
+                r['segments'] = [(minx, miny),(minx, maxy),(maxx, maxy),(maxx, miny)]
+            elif r['category']['id'] == 0:
                 # find the right piece by
                 # 1. find the pair of points that has the biggest distance
                 # 2. split segments by the index of the pair of points
@@ -64,7 +69,7 @@ class Model():
                     r['segments'] = p1
                 else:
                     r['segments'] = p2
-        return ret[0]
+        return ret[0], width, height
     
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -90,8 +95,13 @@ def plot_result(imgf, result = [], thickness = 2, clrmap = {
 }):
     if isinstance(imgf, str):
         image = cv2.imread(imgf)
-    else:
+    elif isinstance(imgf, Image.Image):
+        numpy_image = np.array(imgf)
+        image = cv2.cvtColor(numpy_image, cv2.COLOR_RGB2BGR)
+    elif isinstance(imgf, np.ndarray):
         image = imgf
+    else:
+        raise Exception('Unknown image format', imgf)
     height, width, channels = image.shape
     for r in result:
         cat = r['category']

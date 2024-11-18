@@ -40,7 +40,7 @@ if __name__ == "__main__":
         for tmp in rst:
             imgf = tmp['image_url']
             annotation = tmp['annotation']
-            result = model.predict(imgf, 4)
+            result, width, height = model.predict(imgf, 4)
             # visualize(imgf, [], annotation)
             # visualize(imgf, result)
             img = plot_result(imgf, result)

@@ -1,10 +1,13 @@
 from pydantic import BaseModel
 from typing import List
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, UploadFile, HTTPException
 from starlette.responses import StreamingResponse
-from inference import Model, plot_result
+from .inference import Model, plot_result
 import cv2
 import io
+from PIL import Image
+from io import BytesIO
+
 model = Model()
 # Define Pydantic models for data validation
 class Category(BaseModel):
@@ -27,12 +30,14 @@ app = FastAPI()
 
 @app.post("/predict/json", response_model=ModelResult)
 async def predict_json(file: UploadFile):
-    result = model.predict(file.filename)
-    width = result['width'],
-    height = result['height'],
+    if file.content_type not in ["image/jpeg", "image/png"]:
+        raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG and PNG images are allowed.")
+    image_data = await file.read()
+    image = Image.open(BytesIO(image_data)).convert("RGB")
+    result, width, height = model.predict(image)
     ret = ModelResult(
-        width = result['width'],
-        height = result['height'],
+        width = int(width),
+        height = int(height),
         segmentations = [])
     for r in result:
         c = r['category']
@@ -49,9 +54,24 @@ async def predict_json(file: UploadFile):
 
     
 
-@app.post("/predict/file")
+@app.post("/predict/file",
+    response_class=StreamingResponse,
+    responses={
+        200: {
+            "content": {"image/png": {}},
+            "description": "Return the same image with predicted segmentations."
+        },
+        400: {
+            "description": "Invalid file type. Only image files are allowed."
+        }        
+    }    
+)
 async def predict_file(file: UploadFile):
-    result = model.predict(file.filename)
-    cv2img = plot_result(file.filename, result)
+    if file.content_type not in ["image/jpeg", "image/png"]:
+        raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG and PNG images are allowed.")
+    image_data = await file.read()
+    image = Image.open(BytesIO(image_data)).convert("RGB")
+    result, w, h = model.predict(image)
+    cv2img = plot_result(image, result)
     res, im_png = cv2.imencode(".png", cv2img)
     return StreamingResponse(io.BytesIO(im_png.tobytes()), media_type='image/png')
