@@ -34,7 +34,7 @@ def load_dataset(split = 'test', precision = 4):
 
 
 if __name__ == "__main__":
-    if False:
+    if False :
         ann, imgf = load_ann('0265-3aba883537da7386a607802494ed5f11')
         visualize(imgf, [], ann)
         r = model.predict(imgf)
