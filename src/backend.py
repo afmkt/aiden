@@ -7,6 +7,7 @@ import cv2
 import io
 from PIL import Image
 from io import BytesIO
+from fastapi.middleware.cors import CORSMiddleware
 
 model = Model()
 # Define Pydantic models for data validation
@@ -27,6 +28,13 @@ class ModelResult(BaseModel):
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],  # Allow these origins
+    allow_credentials=True,  # Allow cookies or Authorization headers
+    allow_methods=["*"],  # Allowed HTTP methods
+    allow_headers=["*"],  # Allowed headers
+)
 
 @app.post("/predict/json", response_model=ModelResult)
 async def predict_json(file: UploadFile):
