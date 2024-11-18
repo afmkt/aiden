@@ -1,7 +1,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
-from src.inference import Model, load_ann, visualize, plot_result
+from src.inference import Model, load_ann, visualize, plot_result, display
 from src.prepare import YOLO_DIR
 import yaml
 
@@ -42,6 +42,6 @@ if __name__ == "__main__":
             annotation = tmp['annotation']
             result = model.predict(imgf, 4)
             # visualize(imgf, [], annotation)
-            visualize(imgf, result)
-            # plot_result(imgf, annotation)
-            # plot_result(imgf, result)
+            # visualize(imgf, result)
+            img = plot_result(imgf, result)
+            display(img, f'{imgf} prediction')

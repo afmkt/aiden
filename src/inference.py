@@ -73,9 +73,9 @@ YELLOW = (0, 255, 255)
 MAGENTA = (255, 0, 255)
 CYAN = (255, 255, 0)        
 
-def display(image):
+def display(image, label= ''):
     while(True):
-        cv2.imshow('image', image)
+        cv2.imshow(label, image)
         if cv2.waitKey(20) & 0xFF == 27:
             break
     cv2.destroyAllWindows()
