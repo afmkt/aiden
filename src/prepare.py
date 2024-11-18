@@ -281,10 +281,6 @@ def coco_seg2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
             for ann in anns:
                 # https://docs.ultralytics.com/datasets/segment/#ultralytics-yolo-format
                 category_id = ann['category_id']
-                # bbox = ann['bbox']  # [x, y, width, height]
-                # minx, miny, w, h = tuple(bbox)
-                # xcenter = minx + w / 2.0
-                # ycenter = miny + h / 2.0
                 segmentation = ann['segmentation']  
                 if len(segmentation) == 1:
                     segmentation = segmentation[0]
@@ -293,17 +289,10 @@ def coco_seg2yolo(srcdir = WORKING_DIR, dstdir = YOLO_DIR, train_ratio = 0.8, va
                     for p in segmentation:
                         all_points.extend(zip(p[::2], p[1::2]))
                     x, y = Polygon(all_points).xy
-                    # convert [(x1, y1), (x2, y2) ...] to [x1, y1, x2, y2 ...]
                     segmentation = [item for sublist in zip(x, y) for item in sublist]
                 else:
                     raise Exception(f'Invalid number({len(segmentation)}) of polygons in segmentation')
-                yolo_line = [
-                    category_id, 
-                    # xcenter / imgw, 
-                    # ycenter / imgh, 
-                    # w / imgw, 
-                    # h / imgh
-                    ]
+                yolo_line = [category_id]
                 yolo_line.extend([(n / imgw) if idx % 2 == 0 else (n / imgh) for idx, n in enumerate(segmentation)])
                 coco_anns.append(yolo_line)
 

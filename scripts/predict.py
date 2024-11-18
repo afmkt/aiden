@@ -50,6 +50,45 @@ def visualize(imgf, result = [], annotation = []):
     plt.show()
 
 
+def pick_piece(segs):
+    distance = 0.0
+    idx1 = None
+    idx2 = None
+    for i1 in range(len(segs)):
+        for i2 in range(len(segs)):
+            x1, y1 = segs[i1]
+            x2, y2 = segs[i2]
+            d = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)
+            if ((idx1 is None) or (idx2 is None)) or (d > distance):
+                distance = max(distance, d)
+                idx1 = i1 
+                idx2 = i2
+    idx_s = min(idx1, idx2)
+    idx_b = max(idx1, idx2)
+    p1 = segs[:idx_s] + segs[idx_b:]
+    p2 = segs[idx_s: idx_b]
+    avg1 = sum(list(zip(*p1))[1]) / len(p1)
+    avg2 = sum(list(zip(*p2))[1]) / len(p2)
+    if avg1 > avg2 :
+        return p1
+    elif avg1 < avg2:
+        return p2
+    elif len(p1) > len(p2):
+        return p1
+    else:
+        return p2
+
+def post_process_0(result):
+    for r in result:
+        c = r['category']
+        if c['id'] == 0:
+            # find the right piece by
+            # 1. find the pair of points that has the biggest distance
+            # 2. split segments by the index of the pair of points
+            # 3. return the piece that has the larger average value of Y
+            r['segments'] = pick_piece(r['segments'])
+    return result
+
 def predict(imgf, precision = 4):
     result = model.predict(imgf)
     ret = [
@@ -61,7 +100,7 @@ def predict(imgf, precision = 4):
         'confidence': round(b.conf[0].item(), precision),
         'segments': [tuple([round(e[0], precision), round(e[1], precision)]) for e in m.xyn[0]]
     } for b, m in zip(r.boxes, r.masks)] for r in result]
-    return ret[0]
+    return post_process_0(ret[0])
 
 def load_ann(imgf:str, datayaml: str | Dict | None = os.path.join(YOLO_DIR, 'seg', 'data.yaml'), precision = 4):
     if not isinstance(datayaml, dict):
@@ -131,7 +170,7 @@ if __name__ == "__main__":
         r = predict(imgf)
         visualize(imgf, r)
     else:
-        rst = load_dataset('train', 4)
+        rst = load_dataset('test', 4)
         for tmp in rst:
             imgf = tmp['image_url']
             annotation = tmp['annotation']
