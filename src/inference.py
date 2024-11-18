@@ -14,8 +14,8 @@ matplotlib.rc('font', family='Hiragino Sans GB')
 
 
 class Model():
-    def __init__(self, sufix="") -> None:
-        self.model = YOLO(os.path.join('runs', 'segment', f'train{sufix}', 'weights','best.pt'))
+    def __init__(self, model_file = os.path.join('runs', 'segment', 'train', 'weights','best.pt')) -> None:
+        self.model = YOLO(model_file)
 
     def predict(self, img: str, precision = 4):
         result = self.model(img) 
