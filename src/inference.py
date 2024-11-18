@@ -25,6 +25,8 @@ class Model():
                 'id':int(b.cls[0].item()),
                 'name': r.names[int(b.cls[0].item())]
             },
+            'width': r.orig_shape[1],
+            'height': r.orig_shape[0],
             'confidence': round(b.conf[0].item(), precision),
             'segments': [tuple([round(e[0], precision), round(e[1], precision)]) for e in m.xyn[0]]
         } for b, m in zip(r.boxes, r.masks)] for r in result]
