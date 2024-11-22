@@ -1,13 +1,13 @@
 from pydantic import BaseModel
 from typing import List
-from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi import UploadFile, HTTPException
 from starlette.responses import StreamingResponse
 from .inference import Model, plot_result
 import cv2
 import io
 from PIL import Image
 from io import BytesIO
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import APIRouter
 
 model = Model()
 # Define Pydantic models for data validation
@@ -26,17 +26,9 @@ class ModelResult(BaseModel):
     segmentations: List[Segmentation]
 
 
-app = FastAPI()
+router = APIRouter()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=['*'],  # Allow these origins
-    allow_credentials=True,  # Allow cookies or Authorization headers
-    allow_methods=["*"],  # Allowed HTTP methods
-    allow_headers=["*"],  # Allowed headers
-)
-
-@app.post("/predict/json", response_model=ModelResult)
+@router.post("/predict/json", response_model=ModelResult)
 async def predict_json(file: UploadFile):
     if file.content_type not in ["image/jpeg", "image/png"]:
         raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG and PNG images are allowed.")
@@ -62,7 +54,7 @@ async def predict_json(file: UploadFile):
 
     
 
-@app.post("/predict/file",
+@router.post("/predict/file",
     response_class=StreamingResponse,
     responses={
         200: {

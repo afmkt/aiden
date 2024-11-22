@@ -4,8 +4,15 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../"
 from src.inference import Model, load_ann, visualize, plot_result, display
 from src.prepare import YOLO_DIR
 import yaml
+import typer
+from enum import Enum
+class Category(Enum):
+    TEST='test'
+    TRAIN='train'
+    VAL='val'
 
-model = Model()
+
+
 
 
 
@@ -29,19 +36,33 @@ def load_dataset(split = 'test', precision = 4):
     return ret
 
 
+
+
+app = typer.Typer()
+
+model = Model()
+
+@app.command()
+def image(name: str):
+    ann, imgf = load_ann(name)
+    visualize(imgf, [], ann)
+    r = model.predict(imgf)
+    visualize(imgf, r)
+
+@app.command()
+def random(category: Category):
+    rst = load_dataset(category.value, 4)
+    for tmp in rst:
+        imgf = tmp['image_url']
+        annotation = tmp['annotation']
+        result, width, height = model.predict(imgf, 4)
+        visualize(imgf, [], annotation)
+        # visualize(imgf, result)
+        img = plot_result(imgf, result)
+        display(img, f'{imgf} prediction')
+
+
+
+
 if __name__ == "__main__":
-    if False :
-        ann, imgf = load_ann('0265-3aba883537da7386a607802494ed5f11')
-        visualize(imgf, [], ann)
-        r = model.predict(imgf)
-        visualize(imgf, r)
-    else:
-        rst = load_dataset('test', 4)
-        for tmp in rst:
-            imgf = tmp['image_url']
-            annotation = tmp['annotation']
-            result, width, height = model.predict(imgf, 4)
-            # visualize(imgf, [], annotation)
-            # visualize(imgf, result)
-            img = plot_result(imgf, result)
-            display(img, f'{imgf} prediction')
+    app()
