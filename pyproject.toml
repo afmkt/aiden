@@ -24,7 +24,6 @@ dependencies = [
     "shapely>=2.0.6",
     "solara>=1.41.0",
     "sqlmodel>=0.0.22",
-    "supervision>=0.24.0",
     "torch>=2.5.1",
     "torchaudio>=2.5.1",
     "torchvision>=0.20.1",

@@ -45,8 +45,6 @@ dependencies = [
     { name = "shapely" },
     { name = "solara" },
     { name = "sqlmodel" },
-    { name = "supervision", version = "0.24.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.13'" },
-    { name = "supervision", version = "0.25.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.13'" },
     { name = "torch" },
     { name = "torchaudio" },
     { name = "torchvision" },
@@ -84,7 +82,6 @@ requires-dist = [
     { name = "shapely", specifier = ">=2.0.6" },
     { name = "solara", specifier = ">=1.41.0" },
     { name = "sqlmodel", specifier = ">=0.0.22" },
-    { name = "supervision", specifier = ">=0.24.0" },
     { name = "torch", specifier = ">=2.5.1" },
     { name = "torchaudio", specifier = ">=2.5.1" },
     { name = "torchvision", specifier = ">=0.20.1" },
@@ -2223,65 +2220,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/3e/da/1fb4bdb72ae12b834becd7e1e7e47001d32f91ec0ce8d7bc1b618d9f0bd9/starlette-0.41.2.tar.gz", hash = "sha256:9834fd799d1a87fd346deb76158668cfa0b0d56f85caefe8268e2d97c3468b62", size = 2573867 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/54/43/f185bfd0ca1d213beb4293bed51d92254df23d8ceaf6c0e17146d508a776/starlette-0.41.2-py3-none-any.whl", hash = "sha256:fbc189474b4731cf30fcef52f18a8d070e3f3b46c6a04c97579e85e6ffca942d", size = 73259 },
-]
-
-[[package]]
-name = "supervision"
-version = "0.24.0"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.13' and platform_system == 'Darwin' and sys_platform == 'darwin'",
-    "python_full_version >= '3.13' and platform_machine == 'aarch64' and platform_system == 'Linux' and sys_platform == 'darwin'",
-    "(python_full_version >= '3.13' and platform_machine != 'aarch64' and platform_system != 'Darwin' and sys_platform == 'darwin') or (python_full_version >= '3.13' and platform_system != 'Darwin' and platform_system != 'Linux' and sys_platform == 'darwin')",
-    "python_full_version >= '3.13' and platform_system == 'Darwin' and sys_platform == 'win32'",
-    "python_full_version >= '3.13' and platform_machine == 'aarch64' and platform_system == 'Linux' and sys_platform == 'win32'",
-    "(python_full_version >= '3.13' and platform_machine != 'aarch64' and platform_system != 'Darwin' and sys_platform == 'win32') or (python_full_version >= '3.13' and platform_system != 'Darwin' and platform_system != 'Linux' and sys_platform == 'win32')",
-    "python_full_version >= '3.13' and platform_system == 'Darwin' and sys_platform != 'darwin' and sys_platform != 'win32'",
-    "python_full_version >= '3.13' and platform_machine == 'aarch64' and platform_system == 'Linux' and sys_platform != 'darwin' and sys_platform != 'win32'",
-    "(python_full_version >= '3.13' and platform_machine != 'aarch64' and platform_system != 'Darwin' and sys_platform != 'darwin' and sys_platform != 'win32') or (python_full_version >= '3.13' and platform_system != 'Darwin' and platform_system != 'Linux' and sys_platform != 'darwin' and sys_platform != 'win32')",
-]
-dependencies = [
-    { name = "defusedxml", marker = "python_full_version >= '3.13'" },
-    { name = "matplotlib", marker = "python_full_version >= '3.13'" },
-    { name = "numpy", marker = "python_full_version >= '3.13'" },
-    { name = "opencv-python", marker = "python_full_version >= '3.13'" },
-    { name = "pillow", marker = "python_full_version >= '3.13'" },
-    { name = "pyyaml", marker = "python_full_version >= '3.13'" },
-    { name = "scipy", marker = "python_full_version >= '3.13'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/4f/28/2dcf6113362f02a19eb9cec168be66a93e9e07385ff11c17e7a33312e5f1/supervision-0.24.0.tar.gz", hash = "sha256:ae71963a294c94cbf2a62e71dae60cc7756025b65bad439b9e374f8d902f0b66", size = 136891 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/01/7e/5119f9a669a50d2dce859f5e1c415f46bd3fe9ea36aa69fb7149f48fa361/supervision-0.24.0-py3-none-any.whl", hash = "sha256:d2b3b94d00dd98b56c39000a09c5316ea95c38be0e545bbe6cedb442a0e0d039", size = 158211 },
-]
-
-[[package]]
-name = "supervision"
-version = "0.25.0"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version < '3.13' and platform_system == 'Darwin' and sys_platform == 'darwin'",
-    "python_full_version < '3.13' and platform_machine == 'aarch64' and platform_system == 'Linux' and sys_platform == 'darwin'",
-    "(python_full_version < '3.13' and platform_machine != 'aarch64' and platform_system != 'Darwin' and sys_platform == 'darwin') or (python_full_version < '3.13' and platform_system != 'Darwin' and platform_system != 'Linux' and sys_platform == 'darwin')",
-    "python_full_version < '3.13' and platform_system == 'Darwin' and sys_platform == 'win32'",
-    "python_full_version < '3.13' and platform_machine == 'aarch64' and platform_system == 'Linux' and sys_platform == 'win32'",
-    "(python_full_version < '3.13' and platform_machine != 'aarch64' and platform_system != 'Darwin' and sys_platform == 'win32') or (python_full_version < '3.13' and platform_system != 'Darwin' and platform_system != 'Linux' and sys_platform == 'win32')",
-    "python_full_version < '3.13' and platform_system == 'Darwin' and sys_platform != 'darwin' and sys_platform != 'win32'",
-    "python_full_version < '3.13' and platform_machine == 'aarch64' and platform_system == 'Linux' and sys_platform != 'darwin' and sys_platform != 'win32'",
-    "(python_full_version < '3.13' and platform_machine != 'aarch64' and platform_system != 'Darwin' and sys_platform != 'darwin' and sys_platform != 'win32') or (python_full_version < '3.13' and platform_system != 'Darwin' and platform_system != 'Linux' and sys_platform != 'darwin' and sys_platform != 'win32')",
-]
-dependencies = [
-    { name = "contourpy", marker = "python_full_version < '3.13'" },
-    { name = "defusedxml", marker = "python_full_version < '3.13'" },
-    { name = "matplotlib", marker = "python_full_version < '3.13'" },
-    { name = "numpy", marker = "python_full_version < '3.13'" },
-    { name = "opencv-python", marker = "python_full_version < '3.13'" },
-    { name = "pillow", marker = "python_full_version < '3.13'" },
-    { name = "pyyaml", marker = "python_full_version < '3.13'" },
-    { name = "scipy", marker = "python_full_version < '3.13'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/45/5b/2c6ff2d81398966727a2e534f478f1bbc480f1a65d8d788ec72f0f874b5a/supervision-0.25.0.tar.gz", hash = "sha256:4d5f15a7e8f683527f4bc2a74b78c938b1213d1a6748cdf33d15a57bcc9b1bd0", size = 146582 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/15/b6/32abf9df6fdeeee19a4051d099035935bc7ed9f8eaebd86513abb6ceeec7/supervision-0.25.0-py3-none-any.whl", hash = "sha256:6fd4872a93669465f4fb98e8ee908fb2d8df877c6ad000f10163f56123728601", size = 181485 },
 ]
 
 [[package]]
