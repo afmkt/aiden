@@ -1,13 +1,14 @@
 
 from src.backend import router as recog_router
 from src.user import router as user_router
+from src.auth import router as auth_router
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Depends
 import solara.server.fastapi
-from fastapi.security import OAuth2PasswordBearer
 from src.db import create_db_tables
 from contextlib import asynccontextmanager
+
 
 load_dotenv()
 
@@ -26,6 +27,10 @@ tags_metadata = [
     {
         'name': 'recognition',
         'description': 'Recognize dental clinical images.'
+    },
+    {
+        'name': 'auth',
+        'description': 'Operations with authorization/authentication'
     }
 ]
 
@@ -66,5 +71,8 @@ app.add_middleware(
 )
 app.include_router(recog_router, prefix='/api/v1')
 app.include_router(user_router, prefix='/api/v1')
+app.include_router(auth_router, prefix='/api/v1')
 app.mount('/web/', app = solara.server.fastapi.app)
+
+
 
