@@ -1,13 +1,14 @@
 from pydantic import BaseModel
 from typing import List
-from fastapi import UploadFile, HTTPException
+from fastapi import UploadFile, HTTPException, APIRouter
 from starlette.responses import StreamingResponse
 from .inference import Model, plot_result
 import cv2
 import io
 from PIL import Image
 from io import BytesIO
-from fastapi import APIRouter
+
+
 
 model = Model()
 # Define Pydantic models for data validation
@@ -26,9 +27,12 @@ class ModelResult(BaseModel):
     segmentations: List[Segmentation]
 
 
-router = APIRouter()
+router = APIRouter(
+    prefix='/recognize',
+    tags=["recognition"],
+)
 
-@router.post("/predict/json", response_model=ModelResult)
+@router.post("/json", response_model=ModelResult)
 async def predict_json(file: UploadFile):
     if file.content_type not in ["image/jpeg", "image/png"]:
         raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG and PNG images are allowed.")
@@ -54,7 +58,7 @@ async def predict_json(file: UploadFile):
 
     
 
-@router.post("/predict/file",
+@router.post("/file",
     response_class=StreamingResponse,
     responses={
         200: {
@@ -75,3 +79,6 @@ async def predict_file(file: UploadFile):
     cv2img = plot_result(image, result)
     res, im_png = cv2.imencode(".png", cv2img)
     return StreamingResponse(io.BytesIO(im_png.tobytes()), media_type='image/png')
+
+
+###### for user
